@@ -39,9 +39,11 @@ async def read_user_item(item_id: str, needy: str):
 async def read_items(
     q: Optional[str] = Query(
         None,
+        alias="item-query",
         title="Query string",
         description="Query string for the items to search in the database that have a good match",
         min_length=3,
+        deprecated=True,
     )
 ):
     results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
