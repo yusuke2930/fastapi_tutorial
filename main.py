@@ -1,6 +1,6 @@
 from typing import List, Optional
 from enum import Enum
-from fastapi import FastAPI, Query, Path
+from fastapi import FastAPI, Query, Path, Body
 from pydantic import BaseModel
 
 class Item(BaseModel):
@@ -8,6 +8,10 @@ class Item(BaseModel):
     description: Optional[str] = None
     price: float
     tax: Optional[float] = None
+
+class User(BaseModel):
+    username: str
+    full_name: Optional[str] = None
 
 class ModelName(str, Enum):
     alexnet = 'alexnet'
@@ -23,12 +27,17 @@ async def read_item(item_id: str, needy: str, skip: int = 0, limit: Optional[int
     item = {"item_id": item_id, "needy": needy, "skip": skip, "limit": limit}
     return item
 
-@app.put("/items/{item_id}")
+@app.post("/items/{item_id}")
 async def create_item(item_id: int, item: Item, q: Optional[str] = None):
     result = {"item_id": item_id, **item.dict()}
     if q:
         result.update({"q": q})
     return result
+
+@app.put("/items/{item_id}")
+async def update_item(item_id: int, user: User, item: Item = Body(..., embed=True), importance: int = Body(...)):
+    results = {"item_id": item_id, "item": item, "user": user, "importance": importance}
+    return results
 
 @app.get("/items/user/{item_id}")
 async def read_user_item(item_id: str, needy: str):
