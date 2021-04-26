@@ -1,7 +1,11 @@
-from typing import List, Optional
+from typing import List, Set, Optional
 from enum import Enum
 from fastapi import FastAPI, Query, Path, Body
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: str
 
 class Item(BaseModel):
     name: str
@@ -12,6 +16,14 @@ class Item(BaseModel):
     )
     price: float = Field(..., gt=0, description="The price must be greater than zero")
     tax: Optional[float] = None
+    tags: Set[str] = set()
+    image: Optional[List[Image]] = None
+
+class Offer(BaseModel):
+    name: str
+    description: Optional[str] = None
+    price: float
+    items: List[Item]
 
 class User(BaseModel):
     username: str
@@ -95,3 +107,7 @@ async def get_model(model_name: ModelName):
 @app.get("/files/{file_path:path}")
 async def read_file(file_path: str):
     return {"file_path": file_path}
+
+@app.post("/images/multiple/")
+async def create_multiple_images(images: List[Image]):
+    return images
