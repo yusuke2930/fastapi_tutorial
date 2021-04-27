@@ -8,7 +8,7 @@ class Image(BaseModel):
     name: str
 
 class Item(BaseModel):
-    name: str
+    name: str = Field(..., example="Foo")
     description: Optional[str] = Field(
         None,
         title="The description of the item",
@@ -18,6 +18,16 @@ class Item(BaseModel):
     tax: Optional[float] = None
     tags: Set[str] = set()
     image: Optional[List[Image]] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "Foo",
+                "description": "A very nice Item",
+                "price": 35.4,
+                "tax": 3.2,
+            }
+        }
 
 class Offer(BaseModel):
     name: str
