@@ -2,7 +2,7 @@ from datetime import datetime, time, timedelta
 from uuid import UUID
 from typing import List, Set, Optional
 from enum import Enum
-from fastapi import FastAPI, Query, Path, Body
+from fastapi import FastAPI, Query, Path, Body, Cookie
 from pydantic import BaseModel, Field, HttpUrl
 
 class Image(BaseModel):
@@ -49,6 +49,10 @@ class ModelName(str, Enum):
 app = FastAPI()
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
+@app.get("/items/")
+async def read_items(ads_id: Optional[str] = Cookie(None)):
+    return {"ads_id": ads_id}
 
 @app.get("/items/{item_id}")
 async def read_item(item_id: str, needy: str, skip: int = 0, limit: Optional[int] = None):
