@@ -3,7 +3,18 @@ from uuid import UUID
 from typing import List, Set, Optional
 from enum import Enum
 from fastapi import FastAPI, Query, Path, Body, Cookie, Header
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, EmailStr
+
+class UserIn(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+    full_name: Optional[str] = None
+
+class UserOut(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: Optional[str] = None
 
 class Image(BaseModel):
     url: HttpUrl
@@ -50,21 +61,40 @@ app = FastAPI()
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
+items = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The Bar fighters", "price": 62, "tax": 20.2},
+    "baz": {
+        "name": "Baz",
+        "description": "There goes my baz",
+        "price": 50.2,
+        "tax": 10.5,
+    },
+}
+
+@app.get(
+    "/items/{item_id}/name",
+    response_model=Item,
+    response_model_include={"name", "description"},
+)
+async def read_item_name(item_id: str):
+    return items[item_id]
+
+@app.get("/items/{item_id}/public", response_model=Item, response_model_exclude={"tax"})
+async def read_item_public_data(item_id: str):
+    return items[item_id]
+
+@app.get("/items/{item_id}", response_model=Item, response_model_exclude_unset=True)
+async def read_item(item_id: str):
+    return items[item_id]
+
 @app.get("/items/")
 async def read_items(ads_id: Optional[str] = Cookie(None), user_agent: Optional[str] = Header(None)):
     return {"ads_id": ads_id, "User-Agent": user_agent}
 
-@app.get("/items/{item_id}")
-async def read_item(item_id: str, needy: str, skip: int = 0, limit: Optional[int] = None):
-    item = {"item_id": item_id, "needy": needy, "skip": skip, "limit": limit}
+@app.post("/items/", response_model=Item)
+async def create_item(item: Item):
     return item
-
-@app.post("/items/{item_id}")
-async def create_item(item_id: int, item: Item, q: Optional[str] = None):
-    result = {"item_id": item_id, **item.dict()}
-    if q:
-        result.update({"q": q})
-    return result
 
 @app.put("/items/{item_id}")
 async def update_item(item_id: int, user: User, item: Item = Body(..., embed=True), importance: int = Body(...)):
@@ -147,3 +177,8 @@ async def read_file(file_path: str):
 @app.post("/images/multiple/")
 async def create_multiple_images(images: List[Image]):
     return images
+
+# Don't do this in production!
+@app.post("/user/", response_model=UserOut)
+async def create_user(user: UserIn):
+    return user
