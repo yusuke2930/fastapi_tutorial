@@ -2,7 +2,7 @@ from datetime import datetime, time, timedelta
 from uuid import UUID
 from typing import List, Set, Optional
 from enum import Enum
-from fastapi import FastAPI, Query, Path, Body, Cookie, Header
+from fastapi import FastAPI, Query, Path, Body, Cookie, Header, Form
 from pydantic import BaseModel, Field, HttpUrl, EmailStr
 
 class UserIn(BaseModel):
@@ -182,3 +182,7 @@ async def create_multiple_images(images: List[Image]):
 @app.post("/user/", response_model=UserOut)
 async def create_user(user: UserIn):
     return user
+
+@app.post("/login/")
+async def login(username: str = Form(...), password: str = Form(...)):
+    return {"username": username}
