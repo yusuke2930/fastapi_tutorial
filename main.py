@@ -190,8 +190,12 @@ async def login(username: str = Form(...), password: str = Form(...)):
 
 
 @app.post("/files/")
-async def create_files(files: List[bytes] = File(...)):
-    return {"file_sizes": [len(file) for file in files]}
+async def create_files(file: bytes = File(...), fileb: UploadFile = File(...), token: str = Form(...)):
+    return {
+        "file_size": len(file),
+        "token": token,
+        "fileb_content_type": fileb.content_type,
+    }
 
 @app.post("/uploadfiles")
 async def create_upload_files(files: List[UploadFile] = File(...)):
