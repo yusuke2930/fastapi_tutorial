@@ -4,6 +4,7 @@ from typing import List, Set, Optional
 from enum import Enum
 from fastapi import FastAPI, Query, Path, Body, Cookie, Header, Form, File, UploadFile, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field, HttpUrl, EmailStr
 
 class UserIn(BaseModel):
@@ -22,26 +23,9 @@ class Image(BaseModel):
     name: str
 
 class Item(BaseModel):
-    name: str = Field(..., example="Foo")
-    description: Optional[str] = Field(
-        None,
-        title="The description of the item",
-        max_length=300
-    )
-    price: float = Field(..., gt=0, description="The price must be greater than zero")
-    tax: Optional[float] = None
-    tags: Set[str] = set()
-    image: Optional[List[Image]] = None
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "Foo",
-                "description": "A very nice Item",
-                "price": 35.4,
-                "tax": 3.2,
-            }
-        }
+    title: str
+    timestamp: datetime
+    description: Optional[str] = None
 
 class Offer(BaseModel):
     name: str
@@ -66,6 +50,8 @@ class UnicornException(Exception):
 app = FastAPI()
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
+fake_db = {}
 
 items = {"foo": "The Foo Wrestlers"}
 
@@ -125,10 +111,10 @@ async def create_item(item: Item):
     """
     return item
 
-@app.put("/items/{item_id}")
-async def update_item(item_id: int, user: User, item: Item = Body(..., embed=True), importance: int = Body(...)):
-    results = {"item_id": item_id, "item": item, "user": user, "importance": importance}
-    return results
+@app.put("/items/{id}")
+async def update_item(id: str, item: Item):
+    json_compatible_item_data = jsonable_encoder(item)
+    fake_db[id] = json_compatible_item_data
 
 @app.get("/items/user/{item_id}")
 async def read_user_item(item_id: str, needy: str):
