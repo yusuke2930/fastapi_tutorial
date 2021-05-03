@@ -2,7 +2,7 @@ from datetime import datetime, time, timedelta
 from uuid import UUID
 from typing import List, Set, Optional
 from enum import Enum
-from fastapi import FastAPI, Query, Path, Body, Cookie, Header, Form, File, UploadFile, HTTPException, Request
+from fastapi import FastAPI, Query, Path, Body, Cookie, Header, Form, File, UploadFile, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field, HttpUrl, EmailStr
 
@@ -105,8 +105,24 @@ async def read_item(item_id: str):
 async def read_items(ads_id: Optional[str] = Cookie(None), user_agent: Optional[str] = Header(None)):
     return {"ads_id": ads_id, "User-Agent": user_agent}
 
-@app.post("/items/", response_model=Item)
+@app.post(
+    "/items/",
+    response_model=Item,
+    summary="Create an item",
+    response_description="The created item",
+    status_code=status.HTTP_201_CREATED,
+    tags=["items"]
+)
 async def create_item(item: Item):
+    """
+        Create an item with all the information:
+
+        - **name**: each item must have a name
+        - **description**: a long description
+        - **price**: required
+        - **tax**: if the item doesn't have tax, you can omit this
+        - **tags**: a set of unique tag strings for this item
+    """
     return item
 
 @app.put("/items/{item_id}")
@@ -147,14 +163,6 @@ async def read_items(
         "start_process": start_process,
         "duration": duration,
     }
-
-@app.post("/items/")
-async def create_item(item: Item):
-    item_dict = item.dict()
-    if item.tax:
-        price_with_tax = item.price + item.tax
-        item_dict.update({"price_with_tax": price_with_tax})
-    return item_dict
 
 @app.get("/users/me")
 async def read_user_me():
