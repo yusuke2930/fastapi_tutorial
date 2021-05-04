@@ -56,6 +56,19 @@ class CommonQueryParams:
         self.skip = skip
         self.limit = limit
 
+
+def query_extractor(q: Optional[str] = None):
+    return q
+
+
+def query_or_cookie_extractor(
+    q: str = Depends(query_extractor), last_query: Optional[str] = Cookie(None)
+):
+    if not q:
+        return last_query
+    return q
+
+
 app = FastAPI()
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
@@ -254,3 +267,8 @@ async def read_items(commons: CommonQueryParams = Depends()):
     items = fake_items_db[commons.skip : commons.skip + commons.limit]
     response.update({"items": items})
     return response
+
+
+@app.get("/items/")
+async def read_query(query_or_default: str = Depends(query_or_cookie_extractor)):
+    return {"q_or_cookie": query_or_default}
