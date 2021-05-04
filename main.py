@@ -80,7 +80,7 @@ async def verify_key(x_key: str = Header(...)):
     return x_key
 
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(verify_token), Depends(verify_key)])
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
